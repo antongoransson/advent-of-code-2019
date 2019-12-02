@@ -2,11 +2,11 @@ from itertools import combinations
 
 
 def addr(a, b, c, registers):
-    registers[int(c)] = registers[int(a)] + registers[int(b)]
+    registers[c] = registers[a] + registers[b]
 
 
 def mulr(a, b, c, registers):
-    registers[int(c)] = registers[int(a)] * registers[int(b)]
+    registers[c] = registers[a] * registers[b]
 
 
 op_codes = {
