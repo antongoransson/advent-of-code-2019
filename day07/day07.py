@@ -104,13 +104,36 @@ def run_program(program, phases, outputs, amp):
     return outputs[amp]
 
 
+def run_program2(program, phases, outputs, feedback_mode=False):
+    amp = 0
+    programs = [program[:] for _ in range(5)]
+    ips = [write(programs[i], 0, phases[i]) for i in range(5)]
+    while programs[amp][ips[4]] != 99:
+        program = programs[amp]
+        ip = ips[amp]
+        op = programs[amp][ip]
+        params = (str(op)[:-2]).zfill(3)
+        op = int(str(op)[-2:])
+        if op == 99:
+            amp = (amp + 1) % 5
+            continue
+        imm3, imm2, imm1 = map(int, params)
+        if op == 3:
+            ips[amp] = write(programs[amp], ip, outputs[amp - 1])
+        elif op == 4:
+            ips[amp] = output(programs[amp], ip, outputs, amp)
+            amp = (amp + 1) % 5
+        else:
+            ips[amp] = op_codes[op](programs[amp], ip, imm1, imm2, imm3)
+    return outputs[4]
+
+
 def solve_part_1(program):
     b = []
     for c in permutations([0, 1, 2, 3, 4], 5):
         outputs = [0] * 5
         phases = dict(zip([0, 1, 2, 3, 4], c))
-        b.append([run_program(program[:], phases, outputs, amp)
-                  for amp in range(0, 5)][-1])
+        b.append(run_program2(program[:], phases, outputs))
     return max(b)
 
 
@@ -119,18 +142,19 @@ def solve_part_2(program):
     for c in permutations([5, 6, 7, 8, 9], 5):
         outputs = [0] * 5
         phases = dict(zip([0, 1, 2, 3, 4], c))
-        b.append([run_program(program[:], phases, outputs, amp)
-                  for amp in range(0, 5)][-1])
+        b.append(run_program2(program[:], phases, outputs))
+    # outputs = [0] * 5
+    # phases = dict(zip([0, 1, 2, 3, 4], [9, 8, 7, 6, 5]))
+    # b.append(run_program2(program[:], phases, outputs))
     return max(b)
 
 
 def main():
-    with open('example2.txt') as f:
+    with open('input.txt') as f:
         # with open('example.txt') as f:
         in_data = list(map(int, f.read().strip().split(",")))
-        # print(in_data)
-        # sol1 = solve_part_1(in_data)
-        # print('Part 1: {}'.format(sol1))
+        sol1 = solve_part_1(in_data)
+        print('Part 1: {}'.format(sol1))
         sol2 = solve_part_2(list(in_data))
         print('Part 2: {}'.format(sol2))
 
