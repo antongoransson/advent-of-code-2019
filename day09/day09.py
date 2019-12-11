@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 POS_MODE = 0
 IMM_MODE = 1
 REL_MODE = 2
@@ -120,12 +122,12 @@ def run_program(program, run_mode):
 
 
 def solve_part_1(program):
-    memory = {i: x for i, x in enumerate(program)}
+    memory = defaultdict(int, {k: v for k, v in enumerate(program)})
     run_program(memory, 1)
 
 
 def solve_part_2(program):
-    memory = {i: x for i, x in enumerate(program)}
+    memory = defaultdict(int, {k: v for k, v in enumerate(program)})
     run_program(memory, 2)
 
 

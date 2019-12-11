@@ -103,18 +103,13 @@ op_codes = {
     8: eq
 }
 
-directions = {
-    0: (-1, 0),
-    1: (0, 1),
-    2: (1, 0),
-    3: (0, -1),
-}
 dx = {
     0: -1,
     1: 0,
     2: 1,
     3: 0
 }
+
 dy = {
     0: 0,
     1: 1,
@@ -160,17 +155,13 @@ def run_program(program, grid, start_val):
 
 
 def solve_part_1(program):
-    memory = defaultdict(int)
-    for i, x in enumerate(program):
-        memory[i] = x
+    memory = defaultdict(int, {k: v for k, v in enumerate(program)})
     grid = defaultdict(int)
     return run_program(memory, grid, 0)
 
 
 def solve_part_2(program):
-    memory = defaultdict(int)
-    for i, x in enumerate(program):
-        memory[i] = x
+    memory = defaultdict(int, {k: v for k, v in enumerate(program)})
     grid = defaultdict(int)
     hull = [['.' for _ in range(43)] for _ in range(6)]
     run_program(memory, grid, 1)
