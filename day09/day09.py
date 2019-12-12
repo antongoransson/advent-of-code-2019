@@ -132,6 +132,7 @@ def solve_part_2(program):
 
 
 def main():
+    moons = {}
     with open('input.txt') as f:
         in_data = list(map(int, f.read().strip().split(",")))
         print('Part 1: ', end='')
