@@ -58,9 +58,7 @@ def solve_part_2(moons):
                     periods[axis] = i
         if all([periods[axis] != -1 for axis in AXES]):
             break
-    lcm1 = lcm(periods['x'], periods['y'])
-    lcm2 = lcm(periods['x'], periods['z'])
-    return lcm(lcm1, lcm2)
+    return lcm(lcm(periods['x'], periods['y']), periods['z'])
 
 
 def main():
