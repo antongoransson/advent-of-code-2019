@@ -1,96 +1,8 @@
+import os
+os.sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from collections import defaultdict, deque
-
-POS_MODE = 0
-IMM_MODE = 1
-REL_MODE = 2
-
-
-def get_val(ip, registers, p_mode, rel_base):
-    r = registers[ip]
-    if p_mode == POS_MODE:
-        r = registers[r]
-    elif p_mode == REL_MODE:
-        r = registers[rel_base + r]
-    return r
-
-
-def addr(registers, ip, p_modes, rel_base):
-    a = get_val(ip + 1, registers, p_modes[0], rel_base)
-    b = get_val(ip + 2, registers, p_modes[1], rel_base)
-    c = registers[ip + 3]
-    if p_modes[2] == REL_MODE:
-        c = rel_base + c
-    registers[c] = a + b
-    ip += 4
-    return ip
-
-
-def mulr(registers, ip, p_modes, rel_base):
-    a = get_val(ip + 1, registers, p_modes[0], rel_base)
-    b = get_val(ip + 2, registers, p_modes[1], rel_base)
-    c = registers[ip + 3]
-    if p_modes[2] == REL_MODE:
-        c = rel_base + c
-    registers[c] = a * b
-    ip += 4
-    return ip
-
-
-def write(registers, ip,  val1, p_modes, rel_base):
-    a = registers[ip + 1]
-    if p_modes[0] == REL_MODE:
-        a = rel_base + a
-    registers[a] = val1
-    ip += 2
-    return ip
-
-
-def output(registers, ip, p_modes, rel_base):
-    a = get_val(ip + 1, registers, p_modes[0], rel_base)
-    ip += 2
-    return ip, a
-
-
-def jmpift(registers, ip, p_modes, rel_base):
-    a = get_val(ip + 1, registers, p_modes[0], rel_base)
-    b = get_val(ip + 2, registers, p_modes[1], rel_base)
-    ip = ip + 3 if a == 0 else b
-    return ip
-
-
-def jmpiff(registers, ip, p_modes, rel_base):
-    a = get_val(ip + 1, registers, p_modes[0], rel_base)
-    b = get_val(ip + 2, registers, p_modes[1], rel_base)
-    ip = ip + 3 if a != 0 else b
-    return ip
-
-
-def less(registers, ip, p_modes, rel_base):
-    a = get_val(ip + 1, registers, p_modes[0], rel_base)
-    b = get_val(ip + 2, registers, p_modes[1], rel_base)
-    c = registers[ip + 3]
-    if p_modes[2] == REL_MODE:
-        c = rel_base + c
-    registers[c] = int(a < b)
-    ip += 4
-    return ip
-
-
-def eq(registers, ip, p_modes, rel_base):
-    a = get_val(ip + 1, registers, p_modes[0], rel_base)
-    b = get_val(ip + 2, registers, p_modes[1], rel_base)
-    c = registers[ip + 3]
-    if p_modes[2] == REL_MODE:
-        c = rel_base + c
-    registers[c] = int(a == b)
-    ip += 4
-    return ip
-
-
-def adj_rel_base(registers, ip, p_modes, rel_base):
-    a = get_val(ip + 1, registers, p_modes[0], rel_base)
-    rel_base += a
-    return rel_base
+from intcode.IntcodeComputer import IntcodeComputer
 
 
 def get_neighbours(grid, pos):
@@ -120,15 +32,6 @@ def bfs(grid, start, end=-1):
         explored.add(node)
     return None
 
-
-op_codes = {
-    1: addr,
-    2: mulr,
-    5: jmpift,
-    6: jmpiff,
-    7: less,
-    8: eq
-}
 
 dx = {
     1: -1,
@@ -163,42 +66,33 @@ def get_next_move(grid, x, y, path):
     return d, path
 
 
-def run_program(program, grid):
-    ip, rel_base = 0, 0
+def run_program(instructions, grid):
     start, goal = (0, 0), (0, 0)
     x, y = start
     d = 1
     path = []
-    while program[ip] != 99:
-        params = (str(program[ip])[:-2]).zfill(3)
-        op = int(str(program[ip])[-2:])
-        p_modes = list(map(int, params))[::-1]
-        if op == 3:
-            ip = write(program, ip, d, p_modes, rel_base)
-        elif op == 4:
-            ip, out = output(program, ip, p_modes, rel_base)
-            grid[x + dx[d], y + dy[d]] = out
-            if out == 0:
-                d, path = get_next_move(grid, x, y, path, )
-                if d == -1:
-                    return len(bfs(grid, start, goal)), goal
-            else:
-                x += dx[d]
-                y += dy[d]
-                d, path = get_next_move(grid, x, y, path)
-            if out == 2:
-                goal = (x, y)
-        elif op == 9:
-            rel_base = adj_rel_base(program, ip, p_modes, rel_base)
-            ip += 2
+
+    def get_input():
+        return d
+    program = IntcodeComputer(instructions, get_input)
+    while not program.done:
+        out = program.run()
+        grid[x + dx[d], y + dy[d]] = out
+        if out == 0:
+            d, path = get_next_move(grid, x, y, path, )
+            if d == -1:
+                return len(bfs(grid, start, goal)), goal
         else:
-            ip = op_codes[op](program, ip, p_modes, rel_base)
+            x += dx[d]
+            y += dy[d]
+            d, path = get_next_move(grid, x, y, path)
+        if out == 2:
+            goal = (x, y)
     return
 
 
-def solve_part_1(program, grid):
-    memory = defaultdict(int, {k: v for k, v in enumerate(program)})
-    n_steps, goal = run_program(memory, grid)
+def solve_part_1(instructions, grid):
+    n_steps, goal = run_program(instructions, grid)
     return n_steps, goal
 
 
@@ -224,7 +118,6 @@ def solve_part_2(grid, goal):
 
 
 def main():
-    moons = {}
     with open('input.txt') as f:
         in_data = list(map(int, f.read().strip().split(",")))
         grid = defaultdict(lambda: -1)
