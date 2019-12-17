@@ -12,6 +12,7 @@ class IntcodeComputer:
             int, {k: v for k, v in enumerate(instructions)})
         self.get_input = get_input
         self.done = False
+        self.out = -1
         self.op_codes = {
             1: self.addr,
             2: self.mulr,
@@ -29,15 +30,17 @@ class IntcodeComputer:
 
     def run(self):
         instruction = self.memory[self.ip]
+        
         while instruction != 99:
             params = str(instruction)[:-2].zfill(3)
             op = int(str(instruction)[-2:])
             p_modes = list(map(int, params))[::-1]
-            out = self.op_codes[op](p_modes)
-            if op == 4:
-                return out
+            self.out = self.op_codes[op](p_modes)
             instruction = self.memory[self.ip]
+            if op == 4:
+                return self.out
         self.done = True
+        return self.out
 
     def get_val(self, ip, p_mode):
         r = self.memory[ip]
