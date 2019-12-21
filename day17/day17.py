@@ -43,16 +43,9 @@ def solve_part_2(instructions):
     B = to_ascii("R,10,R,6,R,4")
     C = to_ascii("R,4,R,10,R,8,R,4")
     out = [ord('n'), 10]
+    moves = main_routine + A + B + C + out 
     def get_input():
-        if len(main_routine) > 0:
-            return main_routine.pop(0)
-        elif len(A) > 0:
-            return A.pop(0)
-        elif len(B) > 0:
-            return B.pop(0)
-        elif len(C) > 0:
-            return C.pop(0)
-        return out.pop(0)
+        return moves.pop(0)
     program = IntcodeComputer(instructions, get_input)
     program.set_val(0, 2)
     while not program.done:
