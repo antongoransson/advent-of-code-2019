@@ -13,6 +13,8 @@ class IntcodeComputer:
         self.get_input = get_input
         self.done = False
         self.out = -1
+        self.i = -1
+        self.inputs = []
         self.op_codes = {
             1: self.addr,
             2: self.mulr,
@@ -26,11 +28,10 @@ class IntcodeComputer:
         }
 
     def set_val(self, ip , val):
-        self.memory [ip] = val
+        self.memory[ip] = val
 
     def run(self):
         instruction = self.memory[self.ip]
-        
         while instruction != 99:
             params = str(instruction)[:-2].zfill(3)
             op = int(str(instruction)[-2:])
@@ -39,6 +40,8 @@ class IntcodeComputer:
             instruction = self.memory[self.ip]
             if op == 4:
                 return self.out
+            if len(self.inputs) > 5 and all([x == -1 for x in self.inputs[-5:]]):
+                return -1
         self.done = True
         return self.out
 
@@ -70,6 +73,7 @@ class IntcodeComputer:
 
     def write(self, p_modes):
         val = self.get_input()
+        self.inputs.append(val)
         a = self.memory[self.ip + 1]
         if p_modes[0] == REL_MODE:
             a = self.rel_base + a
